@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Мессенджер · ЛаймЧат</title>
+    <style>
+        /* ----- Базовые стили (сохранение стиля авторизации + расширение) ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        /* контейнер мессенджера — карточка как и форма, но полноэкранная внутри */
+        .messenger-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 1400px;
+            height: 90vh;
+            min-height: 560px;
+            border-radius: 1.5rem;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.02);
+            display: flex;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        /* ========= ЛЕВАЯ ПАНЕЛЬ (диалоги) ========= */
+        .sidebar {
+            width: 300px;
+            background: #ffffff;
+            border-right: 1px solid #eef2f6;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        /* профиль и шапка слева */
+        .user-profile {
+            padding: 1.2rem 1rem 0.8rem 1rem;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .profile-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .avatar-small {
+            width: 44px;
+            height: 44px;
+            background: #0f172a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 1.1rem;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #0f172a;
+        }
+
+        .user-status {
+            font-size: 0.7rem;
+            color: #22c55e;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .logout-link {
+            font-size: 0.8rem;
+            color: #64748b;
+            text-decoration: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: 2rem;
+            background: #f8fafc;
+            transition: 0.2s;
+        }
+
+        .logout-link:hover {
+            background: #eef2ff;
+            color: #1e293b;
+        }
+
+        /* поиск */
+        .search-bar {
+            padding: 0.75rem 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.85rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 2rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+            background: white;
+        }
+
+        /* список чатов */
+        .chats-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.25rem 0;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            cursor: default;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .chat-item.active {
+            background: #f1f5fe;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .chat-item:hover {
+            background: #fafcff;
+        }
+
+        .chat-avatar {
+            width: 48px;
+            height: 48px;
+            background: #eef2ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 1rem;
+            color: #1e293b;
+            flex-shrink: 0;
+        }
+
+        .chat-preview {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #0f172a;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-weight: normal;
+        }
+
+        .last-message {
+            font-size: 0.8rem;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 4px;
+        }
+
+        /* ========= ПРАВАЯ ОБЛАСТЬ (активный чат) ========= */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            min-width: 0;
+        }
+
+        /* шапка чата */
+        .chat-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+        }
+
+        .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .contact-avatar {
+            width: 44px;
+            height: 44px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #0f172a;
+        }
+
+        .contact-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .contact-status {
+            font-size: 0.7rem;
+            color: #22c55e;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-icon {
+            font-size: 1.2rem;
+            color: #5b6e8c;
+            cursor: default;
+            transition: 0.1s;
+        }
+
+        /* область сообщений */
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: #fefefe;
+        }
+
+        /* сообщения */
+        .message {
+            display: flex;
+            max-width: 80%;
+        }
+
+        .message.received {
+            align-self: flex-start;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            justify-content: flex-end;
+        }
+
+        .bubble {
+            padding: 0.65rem 1rem;
+            border-radius: 1.4rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            box-shadow: 0 1px 0.5px rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        .received .bubble {
+            background: #f1f5f9;
+            color: #1e293b;
+            border-bottom-left-radius: 0.3rem;
+        }
+
+        .sent .bubble {
+            background: #0f172a;
+            color: white;
+            border-bottom-right-radius: 0.3rem;
+        }
+
+        .message-time-small {
+            font-size: 0.65rem;
+            margin-top: 4px;
+            margin-left: 8px;
+            opacity: 0.6;
+            display: block;
+        }
+
+        .sent .message-time-small {
+            text-align: right;
+            margin-right: 6px;
+        }
+
+        /* инпут отправки (чисто UI, без JS) */
+        .message-composer {
+            padding: 1rem 1.5rem 1.2rem;
+            border-top: 1px solid #edf2f7;
+            background: #ffffff;
+        }
+
+        .composer-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #f8fafc;
+            border-radius: 2.5rem;
+            padding: 0.2rem 0.2rem 0.2rem 1rem;
+            border: 1px solid #e2e8f0;
+            transition: 0.2s;
+        }
+
+        .composer-container:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+            background: white;
+        }
+
+        .message-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 0.7rem 0;
+            font-size: 0.9rem;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .send-button {
+            background: #0f172a;
+            border: none;
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            cursor: default;
+            transition: background 0.2s;
+            margin: 4px;
+        }
+
+        .send-button:hover {
+            background: #1e293b;
+        }
+
+        /* стиль для простых разделителей */
+        .divider-text {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin: 0.5rem 0;
+        }
+
+        /* полоса прокрутки аккуратная */
+        .chats-list::-webkit-scrollbar,
+        .messages-area::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .chats-list::-webkit-scrollbar-track,
+        .messages-area::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .chats-list::-webkit-scrollbar-thumb,
+        .messages-area::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        /* адаптив: на маленьких экранах превращается в колонку */
+        @media (max-width: 680px) {
+            .messenger-container {
+                flex-direction: column;
+                height: 95vh;
+            }
+            .sidebar {
+                width: 100%;
+                max-height: 40%;
+                border-right: none;
+                border-bottom: 1px solid #eef2f6;
+            }
+            .chat-main {
+                min-height: 60%;
+            }
+            .message {
+                max-width: 90%;
+            }
+            body {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="messenger-container">
+    <!-- БОКОВАЯ ПАНЕЛЬ: СПИСОК ДИАЛОГОВ -->
+    <div class="sidebar">
+        <div class="user-profile">
+            <div class="profile-row">
+                <div class="user-info">
+                    <div class="avatar-small">{{owner[1]|first}}{{owner[2]|first}}</div>
+                    <div>
+                        <div class="user-name">{{owner[1]}} {{owner[2]|first}}.</div>
+                        <div class="user-status">
+                            <span>●</span> онлайн
+                        </div>
+                    </div>
+                </div>
+                <a href="/logout" class="logout-link" title="Выйти из аккаунта">Выйти</a>
+            </div>
+        </div>
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="🔍 Поиск чатов или сообщений">
+        </div>
+        <div class="chats-list">
+            <!-- Активный чат (Мария) -->
+            <div class="chat-item active">
+                <div class="chat-avatar">МД</div>
+                <div class="chat-preview">
+                    <div class="chat-name">
+                        <span>Мария Д.</span>
+                        <span class="message-time">12:42</span>
+                    </div>
+                    <div class="last-message">Есть новости по проекту? 🔥</div>
+                </div>
+            </div>
+            <!-- Чат с Алексеем -->
+             {% for user in all_users %}
+            <a href='/chat?owner={{owner[0]}}&id={{user[0]}}'><div class="chat-item">
+                <div class="chat-avatar">{{user[1]|first}}{{user[2]|first}}</div>
+                <div class="chat-preview">
+                    <div class="chat-name">
+                        <span>{{user[1]}}{{user[2]|first}}</span>
+                    </div>
+                </div>
+            </div></a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ПРАВАЯ ЧАСТЬ: АКТИВНЫЙ ЧАТ (Мария) -->
+    <div class="chat-main">
+        <div class="chat-header">
+            <div class="contact-info">
+                <div class="contact-avatar">{{deliver[1]|first}}{{deliver[2]|first}}</div>
+                <div class="contact-details">
+                    <h3>{{deliver[1]}} {{deliver[2]}}</h3>
+                    <div class="contact-status">● Онлайн · была недавно</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <span class="action-icon">📞</span>
+                <span class="action-icon">📹</span>
+                <span class="action-icon">🔍</span>
+            </div>
+        </div>
+
+        <!-- ОБЛАСТЬ СООБЩЕНИЙ: статичная переписка -->
+        <div class="messages-area">
+             {% for mes in messages %}
+            <div class="message {% if mes[1] == owner[0] %}sent{% else %}received{% endif %}">
+                <div class="bubble">
+                    {{mes[3]}}
+                    <span class="message-time-small">{{mes[4]}}</span>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <!-- Панель ввода сообщения (только визуал, без js) -->
+        <div class="message-composer">
+            <div class="composer-container">
+                <input id='mes_input' type="text" class="message-input" placeholder="Напишите сообщение...">
+                <div id='send_mes' class="send-button">➤ Отправить</div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="../static/js/script.js"></script>
+</html>
