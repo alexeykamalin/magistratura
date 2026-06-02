@@ -128,7 +128,7 @@ pycache/
 git remote add origin https://github.com/ваш_логин/my_chat.git
 git branch -M main
 git push -u origin main
-```bash
+```
 
 ### 5.3. Разрешение конфликтов
 
@@ -148,4 +148,4 @@ git push -u origin main
 git add .
 git commit -m "Разрешил конфликт"
 git push
-```bash
+```
