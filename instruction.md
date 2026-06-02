@@ -111,6 +111,9 @@ pycache/
 
 ### 5.1. Инициализация и первый коммит
 - Откройте терминал в папке проекта.
+- выполните:
+  - git config --global user.name "Your Name"
+  - git config --global user.email "your.email@example.com"
 - Выполните `git init` – создастся локальный репозиторий.
 - Проверьте, что `.gitignore` лежит в корне и перечисляет ненужные файлы.
 - Добавьте все файлы в индекс: `git add .`
